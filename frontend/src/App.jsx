@@ -3,10 +3,12 @@ import Navbar from './components/Navbar'
 import { Route, Routes } from 'react-router'
 import Home from './pages/Home'
 import Products from './pages/Products'
+import { useThemeStore } from './store/useThemeStore'
 
 const App = () => {
+  const { theme } = useThemeStore()
   return (
-    <div className='min-h-screen bg-base-200 transition-colors duration-300'>
+    <div className='min-h-screen bg-base-200 transition-colors duration-300' data-theme={theme}>
       <Navbar />
       <Routes>
         <Route path='/' element={<Home />} />
