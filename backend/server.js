@@ -23,35 +23,35 @@ app.use(morgan('dev'));
 
 //  apply arcjet rate limit for all routes
 
-app.use(async (req, res) => {
+app.use(async (req, res, next) => {
     try {
         const decision = await aj.protect(req, {
-            // requested: 1 specifies that each request consumes 1 token
-        })
+            requested: 1, // specifies that each request consumes 1 token
+        });
+
         if (decision.isDenied()) {
             if (decision.reason.isRateLimit()) {
-                return res.status(429).json({ error: 'Too many requests, please try again later' });
+                res.status(429).json({ error: "Too Many Requests" });
             } else if (decision.reason.isBot()) {
-                return res.status(403).json({ error: 'Forbidden, you are a bot' });
+                res.status(403).json({ error: "Bot access denied" });
             } else {
-                res.status(403).json({ error: 'Forbidden' });
+                res.status(403).json({ error: "Forbidden" });
             }
-            return
+            return;
         }
-        next()
 
         // check for spoofed bots
-
         if (decision.results.some((result) => result.reason.isBot() && result.reason.isSpoofed())) {
-            res.status(403).json({ error: 'Forbidden, you are a spoofed bot' });
-            return
+            res.status(403).json({ error: "Spoofed bot detected" });
+            return;
         }
+
+        next();
     } catch (error) {
-        console.log("Error in arcjet middleware", error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.log("Arcjet error", error);
         next(error);
     }
-})
+});
 
 app.use('/api/products', productsRoutes)
 
